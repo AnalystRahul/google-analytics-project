@@ -1,0 +1,10 @@
+2 Prepare
+The data used in this case study is public, therefore, everyone can access it. In addition, it is provided by FitBit Fitness Tracker, a well known entity. Due to these reasons, we can conclude the data is credible.
+
+If you want to download it, click here.
+
+To start, let’s set up the environment by downloading and opening the necessary libraries for the analysis.
+
+In the downloaded data folder there are 18 csv files. Each of them show data related to the different functions of the device: calories, activity level, daily steps, etc.
+
+In this study, we will be focusing on daily information to simplify the analysis as shorter time periods don’t affect relevant trends.

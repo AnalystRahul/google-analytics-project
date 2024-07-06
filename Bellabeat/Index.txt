@@ -1,0 +1,26 @@
+Bellabeat Data Analysis | Identifying Trends
+
+16 November 2021
+
+1. Objectives
+1.1 Business Objective
+1.2 Key Stakeholders
+2. Preparation
+3. Data Processing
+3.1 Inspecting the Datasets
+3.2 Excluding Irrelevant Datasets
+3.3 Cleaning Specific Variables
+3.4 Combining the Data frames
+3.5 Removing Superfluous Variables
+3.6 Validating the Variables
+4. Data Analysis
+4.1 Steps vs. Calories Burned
+4.2 Analysis of Users' Daily Activity
+4.3 Exercise Intensity Levels
+4.4 Distribution of Daily Activity Levels
+4.5 Analysis of Sleep Patterns
+4.6 Correlation Between Sleep Quality and Distance Covered
+4.7 Difficulty Sleeping vs. Steps Taken
+4.8 Weight vs. Distance Covered
+5. Reporting
+5.1 Key Insights

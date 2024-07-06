@@ -1,0 +1,191 @@
+
+---
+title: "Bellabeat Data Analysis | Discovering Trends"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+library(scales)
+library(highcharter)
+library(RColorBrewer)
+```
+
+## Introduction
+
+**Bellabeat** is a high-tech manufacturer of health-focused products for women. Their goal is to become a large player in the global smart device market.
+
+---
+
+## Business Task
+
+Bellabeat wants to find new ways to grow its business. To do this, we will analyze data from current users who use Bellabeat's smart devices. The goal is to find trends in the data and make recommendations for the company.
+
+### Key Stakeholders
+
+* **Urška Sršen**: Bellabeat’s co-founder and Chief Creative Officer
+* **Sando Mur**: Mathematician and Bellabeat’s co-founder
+* **Bellabeat Marketing Analytics Team**
+
+---
+
+## Data Preparation
+
+The data used in this analysis is public and provided by FitBit Fitness Tracker, a well-known entity. This makes the data credible. You can download it [here](https://www.kaggle.com/arashnic/fitbit).
+
+Let's start by setting up the necessary libraries and loading the data.
+
+### Loading the Data
+
+We will focus on daily data to keep the analysis simple.
+
+```{r message=FALSE}
+# Loading datasets
+daily_activity <- read_csv("/kaggle/input/bellabeat/dailyActivity_merged.csv")
+heartrate_seconds <- read_csv("/kaggle/input/bellabeat/heartrate_seconds_merged.csv")
+hourly_calories <- read_csv("/kaggle/input/bellabeat/hourlyCalories_merged.csv")
+hourly_intensities <- read_csv("/kaggle/input/bellabeat/hourlyIntensities_merged.csv")
+daily_steps <- read_csv("/kaggle/input/bellabeat/dailySteps_merged.csv")
+daily_sleep <- read_csv("/kaggle/input/bellabeat/sleepDay_merged.csv")
+weight_info <- read_csv("/kaggle/input/bellabeat/weightLogInfo_merged.csv")
+```
+
+### Cleaning and Merging Data
+
+We will clean and merge the datasets for analysis.
+
+```{r}
+# Cleaning date columns
+daily_activity <- daily_activity %>% 
+  rename(Date = ActivityDate) %>% 
+  mutate(Date = as.Date(Date, format = "%m/%d/%Y"))
+
+daily_sleep <- daily_sleep %>% 
+  rename(Date = SleepDay) %>% 
+  mutate(Date = as.Date(Date, format = "%m/%d/%Y"))
+
+weight_info <- weight_info %>% 
+  select(-LogId) %>% 
+  mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>% 
+  mutate(IsManualReport = as.factor(IsManualReport))
+
+# Merging datasets
+final_df <- merge(merge(daily_activity, daily_sleep, by = c('Id', 'Date'), all = TRUE), weight_info, by = c('Id', 'Date'), all = TRUE)
+```
+
+---
+
+## Data Analysis
+
+### Calories Burned by Steps
+
+There is a clear positive correlation between the number of steps taken and calories burned. The more steps you take, the more calories you burn.
+
+```{r fig.align='center', message=FALSE}
+final_df %>% 
+  ggplot(aes(x = TotalSteps, y = Calories, color = Calories)) +
+  geom_point() +
+  geom_smooth() +
+  theme_minimal() +
+  labs(title = 'Calories Burned by Steps Taken', x = 'Total Steps', y = 'Calories Burned')
+```
+
+### Users' Daily Activity
+
+Most users have a similar level of activity throughout the week, with slight variations.
+
+```{r fig.align='center'}
+final_df %>% 
+  mutate(weekdays = weekdays(Date)) %>% 
+  ggplot(aes(x = weekdays, y = TotalSteps, fill = weekdays)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Users' Activity by Day of the Week", x = 'Day of the Week', y = 'Total Steps')
+```
+
+### Intensity of Exercise Activity
+
+Most users engage in light activity.
+
+```{r fig.align='center'}
+final_df %>% 
+  gather(activity, value, VeryActiveDistance, ModeratelyActiveDistance, LightActiveDistance) %>% 
+  group_by(activity) %>% 
+  summarise(total = sum(value)) %>% 
+  ggplot(aes(x = activity, y = total, fill = activity)) +
+  geom_bar(stat = 'identity') +
+  theme_minimal() +
+  labs(title = 'Intensity of Exercise Activity', x = 'Activity Level', y = 'Total Distance')
+```
+
+### Distribution of Daily Activity Level
+
+The majority of the day is spent being sedentary.
+
+```{r fig.align='center'}
+final_df %>% 
+  gather(activity, minutes, VeryActiveMinutes, FairlyActiveMinutes, LightlyActiveMinutes, SedentaryMinutes) %>% 
+  group_by(activity) %>% 
+  summarise(total = sum(minutes)) %>% 
+  ggplot(aes(x = "", y = total, fill = activity)) +
+  geom_bar(stat = 'identity', width = 1) +
+  coord_polar("y") +
+  theme_minimal() +
+  labs(title = 'Distribution of Daily Activity Level', x = '', y = 'Total Minutes')
+```
+
+### Sleep Distribution
+
+Most users sleep between 320 to 530 minutes per day.
+
+```{r fig.align='center'}
+final_df %>% 
+  ggplot(aes(x = TotalMinutesAsleep)) +
+  geom_histogram(binwidth = 30, fill = 'lightblue', color = 'black') +
+  theme_minimal() +
+  labs(title = 'Sleep Distribution', x = 'Minutes Asleep', y = 'Count')
+```
+
+### Sleep vs. Distance Covered
+
+More distance covered doesn't necessarily mean better sleep.
+
+```{r fig.align='center'}
+final_df %>% 
+  group_by(Id) %>% 
+  summarise(avg_distance = mean(TotalDistance, na.rm = TRUE), avg_sleep = mean(TotalMinutesAsleep, na.rm = TRUE)) %>% 
+  ggplot(aes(x = avg_distance, y = avg_sleep)) +
+  geom_point(color = 'blue') +
+  theme_minimal() +
+  labs(title = 'Average Sleep vs. Distance Covered', x = 'Average Distance Covered', y = 'Average Minutes Asleep')
+```
+
+---
+
+## Key Takeaways
+
+1. **Calories and Steps**: There is a strong positive correlation between the number of steps taken and calories burned. Bellabeat can recommend a minimum number of daily steps for users to help them achieve their fitness goals.
+
+2. **Consistent Activity**: Users tend to have similar activity levels throughout the week. Bellabeat could send reminders to encourage consistent activity every day.
+
+3. **Exercise Intensity**: Most users engage in light activity. Bellabeat could focus on promoting light to moderate exercise routines for better health.
+
+4. **Sedentary Time**: Users spend a large portion of their day being sedentary. Bellabeat can develop strategies to reduce sedentary time by encouraging more active breaks.
+
+5. **Sleep and Activity**: Moderate exercise (less than 10,000 steps) is associated with better sleep. Bellabeat can recommend this level of activity for users aiming to improve their sleep quality.
+
+6. **Sleep Routine**: Establishing a pre-sleep routine can improve sleep quality. Bellabeat can send reminders and suggest relaxing activities before bedtime to help users develop a healthy sleep routine.
+
+7. **Health Articles**: Bellabeat can provide health and fitness articles within the app to motivate and educate users.
+
+---
+
+<center><font size="3">**If you found this useful or interesting, please don't forget to comment and upvote. Thank you!**</font></center>
